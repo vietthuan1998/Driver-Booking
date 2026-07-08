@@ -52,13 +52,21 @@ export async function getTripSeatsWithBookings(tripId: string): Promise<TripSeat
 }
 
 /** Bắt đầu chuyến: scheduled → in_progress + ghi giờ khởi hành thực tế.
- *  RLS chỉ cho driver đổi trip_status/actual_*, các cột khác bị khóa. */
+ *  RLS chỉ cho driver đổi trip_status/actual_*, các cột khác bị khóa.
+ *  DB có unique index chặn 2 chuyến in_progress trên cùng 1 xe (lỗi 23505). */
 export async function startTrip(tripId: string): Promise<void> {
   const { error } = await supabase
     .from('trips')
     .update({ trip_status: 'in_progress', actual_departure_time: new Date().toISOString() })
     .eq('id', tripId);
-  if (error) throw new Error('Không bắt đầu được chuyến. Vui lòng thử lại.');
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error(
+        'Xe của bạn đang có chuyến khác đang chạy. Hãy hoàn thành chuyến đó trước khi bắt đầu chuyến mới.',
+      );
+    }
+    throw new Error('Không bắt đầu được chuyến. Vui lòng thử lại.');
+  }
 }
 
 /** Kết thúc chuyến: in_progress → completed + ghi giờ đến thực tế. */
