@@ -38,7 +38,6 @@ export interface Trip {
   trip_code: string;
   route_id: string;
   vehicle_id: string;
-  driver_id: string | null;
   planned_departure_time: string;
   actual_departure_time: string | null;
   actual_arrival_time: string | null;

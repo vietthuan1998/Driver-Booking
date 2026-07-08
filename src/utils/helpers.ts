@@ -42,3 +42,31 @@ export function formatDateShort(iso: string | null): string {
 export function fCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }
+
+/** Chuẩn hóa biển số ô tô khi gõ: "75a12345" → "75A-123.45".
+ *  Cấu trúc: 2 số tỉnh + 1-2 chữ seri + 4-5 số; ký tự thừa/sai vị trí bị bỏ qua. */
+export function formatPlateNumber(input: string): string {
+  const cleaned = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let province = '';
+  let series = '';
+  let number = '';
+  for (const ch of cleaned) {
+    const isDigit = ch >= '0' && ch <= '9';
+    if (province.length < 2) {
+      if (isDigit) province += ch;
+    } else if (!isDigit) {
+      if (series.length < 2 && number.length === 0) series += ch;
+    } else if (series.length > 0 && number.length < 5) {
+      number += ch;
+    }
+  }
+  let out = province + series;
+  if (number) {
+    out += '-' + (number.length === 5 ? `${number.slice(0, 3)}.${number.slice(3)}` : number);
+  }
+  return out;
+}
+
+export function isValidPlateNumber(plate: string): boolean {
+  return /^\d{2}[A-Z]{1,2}-(\d{3}\.\d{2}|\d{4})$/.test(plate);
+}

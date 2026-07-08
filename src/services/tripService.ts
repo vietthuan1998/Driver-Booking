@@ -8,7 +8,7 @@ const TRIP_SELECT = `
   vehicle:vehicles ( id, plate_number, vehicle_name, seat_count )
 `;
 
-/** Chuyến của tài xế đang đăng nhập trong 1 ngày (RLS đã giới hạn driver_id = mình). */
+/** Chuyến của tài xế đang đăng nhập trong 1 ngày (RLS giới hạn theo xe của tài xế). */
 export async function getMyTripsByDate(date: Date): Promise<Trip[]> {
   const { start, end } = getDayRange(date);
   const { data, error } = await supabase
