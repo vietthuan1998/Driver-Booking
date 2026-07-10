@@ -21,6 +21,7 @@ import {
 } from '../services/vehicleService';
 import type { Vehicle } from '../types';
 import { CARD_SHADOW, COLORS, VEHICLE_STATUS_COLOR, VEHICLE_STATUS_LABEL } from '../utils/constants';
+import { formatPlateNumber, isValidPlateNumber } from '../utils/helpers';
 
 export default function VehicleScreen() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -40,7 +41,7 @@ export default function VehicleScreen() {
       const v = await getMyVehicle();
       setVehicle(v);
       if (v) {
-        setPlateNumber(v.plate_number);
+        setPlateNumber(formatPlateNumber(v.plate_number));
         setVehicleName(v.vehicle_name);
         setSeatCount(v.seat_count);
       }
@@ -62,11 +63,15 @@ export default function VehicleScreen() {
       setError('Vui lòng nhập biển số và tên xe');
       return;
     }
+    if (!isValidPlateNumber(plateNumber)) {
+      setError('Biển số chưa hợp lệ. VD: 75A-123.45 hoặc 75A-1234');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await registerVehicle({
-        plate_number: plateNumber.trim().toUpperCase(),
+        plate_number: plateNumber,
         vehicle_name: vehicleName.trim(),
         seat_count: seatCount,
       });
@@ -85,11 +90,15 @@ export default function VehicleScreen() {
       setError('Vui lòng nhập biển số và tên xe');
       return;
     }
+    if (!isValidPlateNumber(plateNumber)) {
+      setError('Biển số chưa hợp lệ. VD: 75A-123.45 hoặc 75A-1234');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await updatePendingVehicle(vehicle.id, {
-        plate_number: plateNumber.trim().toUpperCase(),
+        plate_number: plateNumber,
         vehicle_name: vehicleName.trim(),
       });
       setEditing(false);
@@ -187,8 +196,10 @@ export default function VehicleScreen() {
             placeholder="Biển số xe (VD: 75A-123.45)"
             placeholderTextColor={COLORS.textMuted}
             autoCapitalize="characters"
+            autoCorrect={false}
+            maxLength={11}
             value={plateNumber}
-            onChangeText={setPlateNumber}
+            onChangeText={(t) => setPlateNumber(formatPlateNumber(t))}
           />
           <TextInput
             style={styles.input}

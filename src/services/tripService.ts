@@ -8,7 +8,7 @@ const TRIP_SELECT = `
   vehicle:vehicles ( id, plate_number, vehicle_name, seat_count )
 `;
 
-/** Chuyến của tài xế đang đăng nhập trong 1 ngày (RLS đã giới hạn driver_id = mình). */
+/** Chuyến của tài xế đang đăng nhập trong 1 ngày (RLS giới hạn theo xe của tài xế). */
 export async function getMyTripsByDate(date: Date): Promise<Trip[]> {
   const { start, end } = getDayRange(date);
   const { data, error } = await supabase
@@ -52,7 +52,8 @@ export async function getTripSeatsWithBookings(tripId: string): Promise<TripSeat
 }
 
 /** Bắt đầu chuyến: scheduled → in_progress + ghi giờ khởi hành thực tế.
- *  RLS chỉ cho driver đổi trip_status/actual_*, các cột khác bị khóa. */
+ *  RLS chỉ cho driver đổi trip_status/actual_*, các cột khác bị khóa.
+ *  DB có unique index chặn 2 chuyến in_progress trên cùng 1 xe (lỗi 23505). */
 export async function startTrip(tripId: string): Promise<void> {
   const now = new Date();
 
