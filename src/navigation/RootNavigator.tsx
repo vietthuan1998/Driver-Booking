@@ -7,6 +7,8 @@ import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import TripsScreen from '../screens/TripsScreen';
 import TripDetailScreen from '../screens/TripDetailScreen';
+import StatsScreen from '../screens/StatsScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import VehicleScreen from '../screens/VehicleScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoadingView from '../components/LoadingView';
@@ -26,6 +28,9 @@ const renderHomeIcon = ({ focused }: { focused: boolean }) => (
 );
 const renderTripsIcon = ({ focused }: { focused: boolean }) => (
   <TabIcon emoji="🗓️" focused={focused} />
+);
+const renderStatsIcon = ({ focused }: { focused: boolean }) => (
+  <TabIcon emoji="📊" focused={focused} />
 );
 const renderVehicleIcon = ({ focused }: { focused: boolean }) => (
   <TabIcon emoji="🚐" focused={focused} />
@@ -73,6 +78,14 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="Stats"
+        component={StatsScreen}
+        options={{
+          title: 'Thống kê',
+          tabBarIcon: renderStatsIcon,
+        }}
+      />
+      <Tab.Screen
         name="Vehicle"
         component={VehicleScreen}
         options={{
@@ -115,6 +128,11 @@ export default function RootNavigator() {
             name="TripDetail"
             component={TripDetailScreen}
             options={{ title: 'Chi tiết chuyến', headerBackTitle: 'Quay lại' }}
+          />
+          <Stack.Screen
+            name="History"
+            component={HistoryScreen}
+            options={{ title: 'Lịch sử chuyến', headerBackTitle: 'Quay lại' }}
           />
         </Stack.Navigator>
       ) : (

@@ -15,8 +15,8 @@ import { useAuthStore } from '../stores/authStore';
 import { CARD_SHADOW, COLORS } from '../utils/constants';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('driver5@gmail.com');
+  const [password, setPassword] = useState('123456');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const authError = useAuthStore((s) => s.authError);

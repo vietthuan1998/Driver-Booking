@@ -54,18 +54,85 @@ export async function getTripSeatsWithBookings(tripId: string): Promise<TripSeat
 /** Bắt đầu chuyến: scheduled → in_progress + ghi giờ khởi hành thực tế.
  *  RLS chỉ cho driver đổi trip_status/actual_*, các cột khác bị khóa. */
 export async function startTrip(tripId: string): Promise<void> {
+  const now = new Date();
+
+  const { data: trip, error: tripError } = await supabase
+    .from('trips')
+    .select('id, trip_status, planned_departure_time, actual_departure_time')
+    .eq('id', tripId)
+    .single();
+
+  if (tripError || !trip) {
+    throw new Error('Không tìm thấy chuyến để bắt đầu.');
+  }
+
+  if (trip.trip_status !== 'scheduled') {
+    throw new Error('Chuyến này không ở trạng thái có thể bắt đầu.');
+  }
+
+  const plannedDeparture = new Date(trip.planned_departure_time);
+  const diffMinutes = (plannedDeparture.getTime() - now.getTime()) / (1000 * 60);
+  console.log('startTrip diffMinutes:', diffMinutes, 'plannedDeparture:', plannedDeparture.toISOString(), 'now:', now.toISOString());
+
+if (diffMinutes < -30 || diffMinutes > 30) {
+  throw new Error('Chỉ có thể bắt đầu chuyến trong vòng 30 phút trước hoặc sau giờ khởi hành dự kiến.');
+}
+  const { data: activeTrips, error: activeTripsError } = await supabase
+    .from('trips')
+    .select('id')
+    .eq('trip_status', 'in_progress');
+
+  if (activeTripsError) {
+    throw new Error('Không kiểm tra được chuyến đang chạy.');
+  }
+
+  if ((activeTrips ?? []).length > 0) {
+    throw new Error('Đã có chuyến khác đang chạy, vui lòng hoàn thành chuyến đó trước.');
+  }
+
   const { error } = await supabase
     .from('trips')
-    .update({ trip_status: 'in_progress', actual_departure_time: new Date().toISOString() })
+    .update({ trip_status: 'in_progress', actual_departure_time: now.toISOString() })
     .eq('id', tripId);
+
   if (error) throw new Error('Không bắt đầu được chuyến. Vui lòng thử lại.');
 }
 
 /** Kết thúc chuyến: in_progress → completed + ghi giờ đến thực tế. */
 export async function completeTrip(tripId: string): Promise<void> {
+  const now = new Date();
+
+  const { data: trip, error: tripError } = await supabase
+    .from('trips')
+    .select('id, trip_status, actual_departure_time')
+    .eq('id', tripId)
+    .single();
+
+  if (tripError || !trip) {
+    throw new Error('Không tìm thấy chuyến để hoàn thành.');
+  }
+
+  if (trip.trip_status !== 'in_progress') {
+    throw new Error('Chuyến này không ở trạng thái có thể hoàn thành.');
+  }
+
+  if (!trip.actual_departure_time) {
+    throw new Error('Chuyến chưa có thời gian bắt đầu thực tế.');
+  }
+
+  const actualDeparture = new Date(trip.actual_departure_time);
+  const diffHours = (now.getTime() - actualDeparture.getTime()) / (1000 * 60 * 60);
+
+  if (diffHours < 2) {
+    throw new Error('Chuyến phải chạy ít nhất 2 tiếng trước khi hoàn thành.');
+  }
+
   const { error } = await supabase
     .from('trips')
-    .update({ trip_status: 'completed', actual_arrival_time: new Date().toISOString() })
+    .update({ trip_status: 'completed', actual_arrival_time: now.toISOString() })
     .eq('id', tripId);
+  console.log('completeTrip error:', error);
+  console.log('trip Status:', trip.trip_status, 'actual_departure_time:', trip.actual_departure_time, 'now:', now.toISOString());
   if (error) throw new Error('Không hoàn thành được chuyến. Vui lòng thử lại.');
+  
 }

@@ -42,3 +42,28 @@ export function formatDateShort(iso: string | null): string {
 export function fCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }
+
+export function getWeekRange(date: Date): { start: string; end: string } {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Thứ 2 là bắt đầu
+  
+  const start = new Date(d.setDate(diff));
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+export function getMonthRange(date: Date): { start: string; end: string } {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  
+  const start = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+  
+  return { start: start.toISOString(), end: end.toISOString() };
+}
