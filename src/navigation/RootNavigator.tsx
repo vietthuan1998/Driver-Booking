@@ -1,6 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LoginScreen from '../screens/LoginScreen';
@@ -18,6 +21,9 @@ import type { MainTabParamList, RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Ref dùng để điều hướng từ ngoài cây component (App.tsx: bấm push notification)
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return <Text style={focused ? styles.iconFocused : styles.icon}>{emoji}</Text>;
@@ -105,7 +111,7 @@ function MainTabs() {
   );
 }
 
-export default function RootNavigator() {
+export default function RootNavigator({ onReady }: { onReady?: () => void }) {
   const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -113,7 +119,7 @@ export default function RootNavigator() {
   if (isLoading) return <LoadingView />;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} onReady={onReady}>
       {session && profile ? (
         <Stack.Navigator
           screenOptions={{

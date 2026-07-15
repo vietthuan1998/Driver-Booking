@@ -10,15 +10,60 @@ import {
   View,
 } from 'react-native';
 import StatusBadge from '../components/StatusBadge';
-import { changePassword, signOut } from '../services/authService';
+import { changePassword, signOut, updateProfile } from '../services/authService';
 import { useAuthStore } from '../stores/authStore';
 import { CARD_SHADOW, COLORS } from '../utils/constants';
 import { formatDateShort } from '../utils/helpers';
 
+// SĐT Việt Nam: 10 số, bắt đầu bằng 0 (để trống thì được phép)
+function isValidPhone(phone: string): boolean {
+  return /^0\d{9}$/.test(phone);
+}
+
 export default function ProfileScreen() {
   const profile = useAuthStore((s) => s.profile);
   const session = useAuthStore((s) => s.session);
+  const setProfile = useAuthStore((s) => s.setProfile);
   const [signingOut, setSigningOut] = useState(false);
+
+  // Form chỉnh sửa thông tin cá nhân
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const openEditForm = () => {
+    setEditName(profile?.full_name ?? '');
+    setEditPhone(profile?.phone ?? '');
+    setEditError(null);
+    setShowEditForm(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const name = editName.trim();
+    const phone = editPhone.trim();
+    if (!name) {
+      setEditError('Vui lòng nhập họ tên');
+      return;
+    }
+    if (phone && !isValidPhone(phone)) {
+      setEditError('Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)');
+      return;
+    }
+    setEditError(null);
+    setSavingProfile(true);
+    try {
+      const updated = await updateProfile({ full_name: name, phone: phone || null });
+      setProfile(updated);
+      setShowEditForm(false);
+      Alert.alert('Thành công', 'Thông tin cá nhân đã được cập nhật.');
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Cập nhật thông tin thất bại');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Form đổi mật khẩu
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -108,6 +153,60 @@ export default function ProfileScreen() {
         <InfoRow label="Số điện thoại" value={profile.phone ?? '—'} />
         <InfoRow label="Vai trò" value="Tài xế" />
         <InfoRow label="Ngày tham gia" value={formatDateShort(profile.created_at)} />
+      </View>
+
+      <View style={[styles.card, styles.cardLeft]}>
+        <Pressable
+          style={styles.passwordToggle}
+          onPress={() => {
+            if (showEditForm) setShowEditForm(false);
+            else openEditForm();
+          }}
+        >
+          <Text style={styles.passwordToggleText}>✏️ Chỉnh sửa thông tin</Text>
+          <Text style={styles.passwordToggleArrow}>{showEditForm ? '˄' : '˅'}</Text>
+        </Pressable>
+
+        {showEditForm && (
+          <View style={styles.passwordForm}>
+            <TextInput
+              style={styles.input}
+              placeholder="Họ và tên"
+              placeholderTextColor="#9aa4b8"
+              value={editName}
+              onChangeText={setEditName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Số điện thoại (không bắt buộc)"
+              placeholderTextColor="#9aa4b8"
+              keyboardType="phone-pad"
+              value={editPhone}
+              onChangeText={setEditPhone}
+            />
+
+            {editError && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{editError}</Text>
+              </View>
+            )}
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.submitButton,
+                (pressed || savingProfile) && styles.pressed,
+              ]}
+              onPress={handleSaveProfile}
+              disabled={savingProfile}
+            >
+              {savingProfile ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitButtonText}>Lưu thông tin</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <View style={[styles.card, styles.cardLeft]}>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
 import { getCurrentProfile, signOut } from '../services/authService';
+import { enablePushNotifications } from '../services/notificationService';
 import type { Profile } from '../types';
 
 interface AuthState {
@@ -13,6 +14,8 @@ interface AuthState {
   initializeAuth: () => void;
   cleanup: () => void;
   clearAuthError: () => void;
+  /** Cập nhật profile trong store sau khi driver sửa thông tin cá nhân */
+  setProfile: (profile: Profile) => void;
 }
 
 let unsubscribe: (() => void) | null = null;
@@ -50,6 +53,9 @@ export const useAuthStore = create<AuthState>((set) => ({
             return;
           }
           set({ session, profile, isLoading: false, authError: null });
+          // Đăng ký FCM token sau khi chắc chắn là driver active
+          // (nuốt lỗi bên trong — push lỗi không được chặn đăng nhập)
+          enablePushNotifications(profile.id);
         } catch {
           set({ session: null, profile: null, isLoading: false, authError: 'Không tải được thông tin tài khoản' });
         }
@@ -64,4 +70,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearAuthError: () => set({ authError: null }),
+
+  setProfile: (profile) => set({ profile }),
 }));

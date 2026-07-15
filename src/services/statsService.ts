@@ -39,31 +39,17 @@ export async function getStats(
     .gte('planned_departure_time', start)
     .lte('planned_departure_time', end);
 
-console.log('========== getStats ==========');
-console.log('Query range:', {
-  start,
-  end,
-});
-
-console.log('Supabase Error:', tripsError);
-
-console.log(
-  'Supabase Response:',
-  JSON.stringify(trips, null, 2),
-);
-
-
   if (tripsError) throw new Error('Không tải được thống kê');
 
   const tripList = (trips ?? []) as any[];
 
-  const completedTrips = tripList.filter((t) => t.trip_status === 'completed');
+  const completedTrips = tripList.filter(t => t.trip_status === 'completed');
   const totalTrips = tripList.length;
   let totalRevenue = 0;
   let totalPassengers = 0;
 
   // Tính tổng doanh thu và số hành khách
-  completedTrips.forEach((trip) => {
+  completedTrips.forEach(trip => {
     const tripSeats = trip.trip_seats || [];
     tripSeats.forEach((seat: any) => {
       if (seat.booking?.status === 'confirmed') {
@@ -72,9 +58,6 @@ console.log(
       }
     });
   });
-console.log('Completed trips:', completedTrips.length);
-console.log('Total revenue:', totalRevenue);
-console.log('Total passengers:', totalPassengers);
 
   return {
     totalTrips,
@@ -137,7 +120,7 @@ export async function getTripHistory(
 
   const trips = (data ?? []) as any[];
 
-  return trips.map((trip) => {
+  return trips.map(trip => {
     let totalFare = 0;
     let passengersCount = 0;
 
@@ -190,7 +173,7 @@ export async function getTripHistoryByMonth(
 
   const trips = (data ?? []) as any[];
 
-  return trips.map((trip) => {
+  return trips.map(trip => {
     let totalFare = 0;
     let passengersCount = 0;
 

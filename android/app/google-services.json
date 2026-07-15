@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1049102033030",
+    "project_id": "carbooking-a48c3",
+    "storage_bucket": "carbooking-a48c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049102033030:android:0e8a1ab36920ec8711b107",
+        "android_client_info": {
+          "package_name": "com.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEefyaiJcyXvjTGH6k5OerwqokATnLAt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
